@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  STAFF
+  RESIDENT
+  OWNER
+}
+enum LeaseStatus {
+  DRAFT
+  ACTIVE
+  EXPIRING
+  ENDED
+}
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  FAILED
+}
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+enum NotificationType {
+  PAYMENT
+  MAINTENANCE
+  LEASE
+  SYSTEM
+}
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String
+  passwordHash  String
+  role          UserRole       @default(RESIDENT)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  memberships   Member[]
+  leases        Lease[]        @relation("TenantLeases")
+  payments      Payment[]      @relation("PayerPayments")
+  requests      Maintenance[]  @relation("ReportedRequests")
+  notifications Notification[]
+  applications Application[] @relation("ApplicantApplications")
+  reviewedApplications Application[] @relation("ReviewerApplications")
+  sentMessages Message[] @relation("SentMessages")
+  conversations ConversationMember[]
+}
+
+model Property {
+  id          String        @id @default(cuid())
+  name        String
+  address     String
+  units       Int
+  accent      String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  memberships Member[]
+  leases      Lease[]
+  payments    Payment[]
+  requests    Maintenance[]
+  applications Application[]
+  conversations Conversation[]
+}
+
+model Member {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  unit       String?
+  joinedAt   DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  @@unique([userId, propertyId])
+  @@index([propertyId])
+}
+
+model Lease {
+  id         String      @id @default(cuid())
+  propertyId String
+  tenantId   String
+  unit       String
+  monthlyRent Int
+  startsAt   DateTime
+  endsAt     DateTime
+  status     LeaseStatus @default(ACTIVE)
+  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant     User        @relation("TenantLeases", fields: [tenantId], references: [id])
+  payments   Payment[]
+  @@index([propertyId, status])
+}
+
+model Payment {
+  id         String        @id @default(cuid())
+  propertyId String
+  leaseId    String?
+  payerId    String
+  amount     Int
+  dueDate    DateTime
+  paidAt     DateTime?
+  status     PaymentStatus @default(PENDING)
+  property   Property      @relation(fields: [propertyId], references: [id])
+  lease      Lease?        @relation(fields: [leaseId], references: [id])
+  payer      User          @relation("PayerPayments", fields: [payerId], references: [id])
+  @@index([propertyId, status])
+}
+
+model Maintenance {
+  id         String            @id @default(cuid())
+  propertyId String
+  reporterId String?
+  title      String
+  location   String
+  details    String?
+  priority   Priority          @default(MEDIUM)
+  status     MaintenanceStatus @default(OPEN)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  property   Property          @relation(fields: [propertyId], references: [id])
+  reporter   User?             @relation("ReportedRequests", fields: [reporterId], references: [id])
+  @@index([propertyId, status])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, readAt])
+}
+
+model Application {
+  id           String             @id @default(cuid())
+  propertyId   String
+  applicantId  String
+  reviewerId   String?
+  unit         String
+  notes        String?
+  status       ApplicationStatus  @default(SUBMITTED)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  property     Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  applicant    User               @relation("ApplicantApplications", fields: [applicantId], references: [id], onDelete: Cascade)
+  reviewer     User?              @relation("ReviewerApplications", fields: [reviewerId], references: [id])
+  verification Verification?
+  @@index([propertyId, status])
+  @@index([applicantId, status])
+}
+
+model Verification {
+  id            String             @id @default(cuid())
+  applicationId String             @unique
+  status        VerificationStatus @default(PENDING)
+  documentUrl   String?
+  notes         String?
+  verifiedAt    DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  application   Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id         String               @id @default(cuid())
+  propertyId String?
+  subject    String?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  property   Property?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  members    ConversationMember[]
+  messages   Message[]
+}
+
+model ConversationMember {
+  conversationId String
+  userId         String
+  joinedAt       DateTime @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  @@index([conversationId, createdAt])
+}
