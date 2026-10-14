@@ -9,6 +9,7 @@ export async function seedDevelopment() {
     { email: "superadmin@example.com", name: "Super Admin", role: "ADMIN", password: "SuperAdmin123!" },
     { email: "admin@example.com", name: "Society Admin", role: "MANAGER", password: "SocietyAdmin123!" },
     { email: "owner@example.com", name: "Property Owner", role: "OWNER", password: "Owner123!" },
+    { email: "staff@example.com", name: "Maintenance Staff", role: "STAFF", password: "Staff123!" },
     { email: "tenant@example.com", name: "Tenant User", role: "RESIDENT", password: "Tenant123!" },
     { email: "resident@example.com", name: "Resident User", role: "RESIDENT", password: "Resident123!" },
   ];

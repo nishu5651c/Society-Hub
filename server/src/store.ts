@@ -23,4 +23,10 @@ export const store = {
     if (!item) throw new HttpError(404, "Property not found");
     return item;
   },
+  updateMaintenanceStatus(id: string, status: Maintenance["status"]) {
+    const item = this.maintenance.find((m) => m.id === id);
+    if (!item) throw new HttpError(404, "Maintenance not found");
+    item.status = status;
+    return item;
+  },
 };

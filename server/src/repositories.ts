@@ -30,6 +30,17 @@ export const maintenanceRepository = {
       ? prisma.maintenance.create({ data: { ...input, reporterId: input.reporterId ?? null } })
       : store.createMaintenance(input);
   },
+  async update(id: string, data: { status?: "OPEN" | "IN_PROGRESS" | "RESOLVED" }) {
+    if (prisma) {
+      const result = await prisma.maintenance.update({ where: { id }, data: { ...(data.status ? { status: data.status } : {}) } });
+      return result;
+    }
+    // development fallback
+    const item = store.maintenance.find((m) => m.id === id);
+    if (!item) throw new HttpError(404, "Maintenance not found");
+    if (data.status) item.status = data.status as any;
+    return item;
+  },
 };
 
 export const leaseRepository = {
@@ -67,6 +78,14 @@ export const paymentRepository = {
         data: { ...input, leaseId: input.leaseId ?? null, status, paidAt: status === "PAID" ? (input.paidAt ?? new Date()) : null },
         include: { property: true, lease: true },
       });
+    }
+    throw new HttpError(503, "Payment persistence is not configured");
+  },
+  async markPaid(id: string) {
+    if (prisma) {
+      const now = new Date();
+      await prisma.payment.updateMany({ where: { id }, data: { status: "PAID", paidAt: now } });
+      return prisma.payment.findUnique({ where: { id } });
     }
     throw new HttpError(503, "Payment persistence is not configured");
   },
@@ -122,12 +141,12 @@ export const applicationRepository = {
 export const messagingRepository = {
   async list(userId: string) {
     if (!prisma) return [];
-    return prisma.conversation.findMany({ where: { members: { some: { userId } } }, include: { members: { include: { user: { select: { id: true, name: true } } } }, messages: { orderBy: { createdAt: "desc" }, take: 1 } }, orderBy: { updatedAt: "desc" } });
+    return prisma.conversation.findMany({ where: { members: { some: { userId } } }, include: { members: { include: { user: { select: { id: true, name: true } } } }, messages: { orderBy: { createdAt: "asc" }, include: { sender: { select: { id: true, name: true } } } } } });
   },
   async create(userId: string, input: { memberIds: string[]; subject?: string; propertyId?: string; body: string }) {
     if (!prisma) throw new HttpError(503, "Messaging persistence is not configured");
     const memberIds = [...new Set([userId, ...input.memberIds])];
-    return prisma.conversation.create({ data: { subject: input.subject, propertyId: input.propertyId, members: { create: memberIds.map((id) => ({ userId: id })) }, messages: { create: { senderId: userId, body: input.body } } }, include: { messages: true, members: true } });
+    return prisma.conversation.create({ data: { subject: input.subject, propertyId: input.propertyId, members: { create: memberIds.map((id) => ({ userId: id })) }, messages: { create: { senderId: userId, body: input.body } } }, include: { members: { include: { user: { select: { id: true, name: true } } } }, messages: { include: { sender: { select: { id: true, name: true } } } } });
   },
   async messages(userId: string, conversationId: string) {
     if (!prisma) return [];
@@ -158,6 +177,13 @@ export const userRepository = {
     if (prisma) return prisma.user.create({ data: { ...input, role: input.role ?? "RESIDENT" } });
     const user = { ...input, role: input.role ?? "RESIDENT", id: `mock_user_${Date.now()}` };
     users.push(user);
+    return user;
+  },
+  async updateRole(id: string, role: UserRecord["role"]) {
+    if (prisma) return prisma.user.update({ where: { id }, data: { role } });
+    const user = users.find((u) => u.id === id || u.email === id);
+    if (!user) throw new HttpError(404, "User not found");
+    user.role = role;
     return user;
   },
 };
