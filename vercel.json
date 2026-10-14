@@ -1,0 +1,135 @@
+# SocietyHub
+
+SocietyHub is a modern residential and rental management platform designed for apartment communities, housing societies, flat owners, renters, and admin teams. It provides a premium SaaS-style dashboard for managing properties, applications, rent collection, maintenance, communications, and resident operations.
+
+This project is designed as a working MVP that can be run locally and deployed to common free-tier hosting services.
+
+## Features
+
+- Premium dashboard for society operations
+- Property listings and occupancy tracking
+- Application review workflow
+- Payment and rent collection overview
+- Maintenance request tracking
+- Resident messaging UI
+- Demo admin authentication flow
+- Responsive layout for desktop and mobile
+- Local mock data support for quick demo runs
+
+## Tech Stack
+
+- React + Vite
+- TypeScript
+- CSS custom styling (no extra heavy framework required for quick deployment)
+- Node.js + Express backend structure
+- Prisma + PostgreSQL-ready schema
+- Docker support for local environment setup
+
+## Project Structure
+
+```bash
+.
+├── server/
+│   └── src/
+├── src/
+│   ├── App.tsx
+│   ├── main.tsx
+│   ├── styles.css
+│   ├── services/
+│   └── types.ts
+├── prisma/
+│   └── schema.prisma
+├── .env.example
+├── docker-compose.yml
+├── Dockerfile
+├── Dockerfile.api
+├── package.json
+├── README.md
+└── vite.config.ts
+```
+
+## Local Development
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Start the frontend:
+
+```bash
+npm run dev
+```
+
+The app will launch on:
+
+```bash
+http://localhost:5173
+```
+
+3. Optional: start the backend API:
+
+```bash
+npm run api:dev
+```
+
+4. API base URL for frontend:
+
+Copy `.env.example` to `.env` and update the API URL if needed.
+
+```bash
+cp .env.example .env
+```
+
+## Demo Login
+
+The current frontend demo uses a built-in admin session for quick preview and presentation.
+
+- Email: admin@societyhub.app
+- Password: admin123
+
+## Deployment Notes
+
+This project is structured to be deployable with:
+
+- Vercel for frontend
+- Render or Railway for backend
+- Neon or Supabase for Postgres
+
+For a simple free-tier setup, use:
+
+- Frontend: Vercel
+- API: Render
+- DB: Neon Postgres
+
+## Production & College Project Notes
+
+This is a working MVP rather than a full-scale enterprise system. It is designed to be easy to run, present, and deploy while still looking polished and functional.
+
+If you need to add modules later, the repo already includes a backend and Prisma structure that can be extended with:
+
+- payments
+- maintenance workflows
+- application pipelines
+- real chat
+- notifications
+- audit logs
+- more role-based permissions
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run preview
+npm run api:dev
+npm run api:build
+npm run typecheck
+npm test
+```
+
+## Important
+
+This project is intended as a college demo and product-style MVP. It uses seeded demo data and a working frontend shell so you can run and present the application quickly without needing real production credentials.
+

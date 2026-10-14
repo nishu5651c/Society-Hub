@@ -1,213 +1,90 @@
-# SocietyHub
+import type { ApplicationRecord, DashboardMetric, MaintenanceItem, MessageThread, PaymentItem, Property } from "../types";
 
-A full-stack society management platform for residential communities, built with React + Vite on the frontend and Express + Prisma + PostgreSQL on the backend.
+export const properties: Property[] = [
+  {
+    id: "p-1",
+    title: "Skyline Heights",
+    location: "Banjara Hills, Hyderabad",
+    bhk: "3 BHK",
+    area: "1560 sq ft",
+    rent: 52000,
+    deposit: 95000,
+    occupancy: 92,
+    status: "Available",
+    accent: "linear-gradient(135deg, #7c9cff, #8ed6ff)",
+    amenities: ["Parking", "Lift", "Security", "Gym", "CCTV", "Balcony"],
+  },
+  {
+    id: "p-2",
+    title: "Aster Residency",
+    location: "Whitefield, Bengaluru",
+    bhk: "2 BHK",
+    area: "1185 sq ft",
+    rent: 39000,
+    deposit: 82000,
+    occupancy: 87,
+    status: "Available",
+    accent: "linear-gradient(135deg, #2ec5a8, #5ce3c6)",
+    amenities: ["Parking", "Power backup", "Clubhouse", "Garden", "WiFi"],
+  },
+  {
+    id: "p-3",
+    title: "Oak View Gardens",
+    location: "Kharadi, Pune",
+    bhk: "4 BHK",
+    area: "2125 sq ft",
+    rent: 76000,
+    deposit: 145000,
+    occupancy: 96,
+    status: "Occupied",
+    accent: "linear-gradient(135deg, #ff9f6e, #ffd28d)",
+    amenities: ["Parking", "Swimming pool", "Security", "Lift", "Gym"],
+  },
+  {
+    id: "p-4",
+    title: "Horizon Court",
+    location: "Koramangala, Bengaluru",
+    bhk: "1 BHK",
+    area: "715 sq ft",
+    rent: 29000,
+    deposit: 65000,
+    occupancy: 83,
+    status: "Available",
+    accent: "linear-gradient(135deg, #a98cff, #d2bbff)",
+    amenities: ["WiFi", "CCTV", "Power backup", "Security", "Balcony"],
+  },
+];
 
-SocietyHub helps property managers, staff, and residents manage properties, membership, leases, maintenance requests, applications, payments, messaging, and notifications from a single workspace.
+export const dashboardMetrics: DashboardMetric[] = [
+  { label: "Portfolio value", value: "₹4.8 Cr", change: "+12.4%", note: "YoY growth" },
+  { label: "Rent collected", value: "₹42.8L", change: "+8.2%", note: "This month" },
+  { label: "Occupancy", value: "94.2%", change: "+2.1%", note: "Across all towers" },
+  { label: "Open issues", value: "19", change: "-6.3%", note: "Resolved faster" },
+];
 
-## Features
+export const payments: PaymentItem[] = [
+  { id: "pay-1", tenant: "Aarav Mehta", flat: "B-1204", due: "Today", amount: 38500, status: "Paid" },
+  { id: "pay-2", tenant: "Sana Kapoor", flat: "A-604", due: "2 days", amount: 42000, status: "Paid" },
+  { id: "pay-3", tenant: "Rohan Desai", flat: "C-302", due: "4 days", amount: 27500, status: "Pending" },
+  { id: "pay-4", tenant: "Nisha Iyer", flat: "A-1102", due: "Overdue", amount: 36000, status: "Pending" },
+];
 
-- Role-based access for admin, manager, staff, resident, and owner accounts
-- Property and unit management
-- Member and lease tracking
-- Payment tracking and status workflow
-- Maintenance request intake and lifecycle updates
-- Resident applications and verification workflow
-- Notification center
-- Real-time or provider-backed messaging and integration layer
-- Prisma-powered PostgreSQL data model
-- Local development seed account for quick setup
+export const maintenanceItems: MaintenanceItem[] = [
+  { id: "maint-1", title: "Low water pressure", location: "Tower B · B-1204", category: "Water", requestedBy: "Aarav Mehta", date: "Today", status: "Open" },
+  { id: "maint-2", title: "Gym treadmill inspection", location: "Clubhouse · Level 2", category: "Fitness", requestedBy: "Society ops", date: "Today", status: "In progress" },
+  { id: "maint-3", title: "Corridor lighting repair", location: "Tower A · 7th floor", category: "Electrical", requestedBy: "Nisha Iyer", date: "Yesterday", status: "Resolved" },
+  { id: "maint-4", title: "Parking gate sensor", location: "Basement · Entry", category: "Security", requestedBy: "Security desk", date: "Yesterday", status: "Open" },
+];
 
-## Tech Stack
+export const applications: ApplicationRecord[] = [
+  { id: "app-1", name: "Meher Nair", property: "Skyline Heights", status: "Under review", moveIn: "12 Aug 2026" },
+  { id: "app-2", name: "Kabir Shah", property: "Aster Residency", status: "Approved", moveIn: "01 Sep 2026" },
+  { id: "app-3", name: "Tanvi Sethi", property: "Horizon Court", status: "Pending", moveIn: "18 Sep 2026" },
+];
 
-- Frontend: React, Vite, TypeScript
-- Backend: Express, TypeScript
-- Database: PostgreSQL via Prisma ORM
-- Auth: JWT + bcrypt hashing
-- Validation: Zod
-- Testing: Node test runner via TSX
+export const messages: MessageThread[] = [
+  { id: "msg-1", name: "Priya Menon", preview: "We can schedule the visit for Saturday morning.", time: "2m ago" },
+  { id: "msg-2", name: "Rahul Shah", preview: "Thanks, the agreement copy is shared.", time: "18m ago" },
+  { id: "msg-3", name: "Operations Team", preview: "Payment reminder sent to 3 tenants today.", time: "1h ago" },
+];
 
-## Repository Structure
-
-```text
-.
-├── .env.example
-├── Dockerfile
-├── Dockerfile.api
-├── docker-compose.yml
-├── docs/
-│   ├── backend.md
-│   ├── integrations.md
-│   └── operations.md
-├── prisma/
-│   └── schema.prisma
-├── server/
-│   └── src/
-│       ├── app.ts
-│       ├── auth.ts
-│       ├── routes.ts
-│       ├── repositories.ts
-│       ├── providers.ts
-│       ├── seed.ts
-│       └── ...
-├── src/
-│   ├── App.tsx
-│   ├── main.tsx
-│   ├── styles.css
-│   └── types.ts
-├── package.json
-├── tsconfig.json
-├── tsconfig.app.json
-├── tsconfig.server.json
-├── vite.config.ts
-├── index.html
-├── README.md
-└── .github/
-```
-
-## Prerequisites
-
-- Node.js 20+ and npm
-- PostgreSQL 15+ (recommended)
-- Optional: Docker for local containerized setup
-
-## Getting Started
-
-1. Clone the repository
-
-```bash
-git clone https://github.com/nishu5651c/Society-Hub.git
-cd Society-Hub
-```
-
-2. Install dependencies
-
-```bash
-npm install
-```
-
-3. Configure environment variables
-
-Copy the example file and update values for your local setup:
-
-```bash
-cp .env.example .env
-```
-
-Example environment:
-
-```env
-PORT=4000
-NODE_ENV=development
-VITE_API_URL=http://localhost:4000/api/v1
-DATABASE_URL=postgresql://societyhub:change-me@localhost:5432/societyhub?schema=public
-JWT_SECRET=replace-with-a-long-random-secret-at-least-32-characters
-CORS_ORIGIN=http://localhost:5173
-PAYMENT_PROVIDER=development
-EMAIL_PROVIDER=development
-SMS_PROVIDER=development
-LOG_LEVEL=info
-```
-
-4. Create the PostgreSQL database
-
-```sql
-CREATE DATABASE societyhub;
-```
-
-5. Run database migrations and generate Prisma client
-
-```bash
-npx prisma migrate deploy --schema prisma/schema.prisma
-npm run prisma:generate
-```
-
-For local development, you can also initialize or seed data with:
-
-```bash
-npm run db:seed:dev
-```
-
-This creates a development admin account:
-
-- Email: admin@local.societyhub.test
-- Password: SocietyHub-dev-2026!
-
-## Running the App
-
-Start the API:
-
-```bash
-npm run api:dev
-```
-
-The API will listen on:
-
-```text
-http://localhost:4000
-```
-
-Start the frontend:
-
-```bash
-npm run dev
-```
-
-The frontend will be available on:
-
-```text
-http://localhost:5173
-```
-
-## Available Scripts
-
-```bash
-npm run dev             # start Vite frontend
-npm run build           # build frontend bundle
-npm run preview         # preview production frontend build
-npm run api:dev        # run Express API in watch mode
-npm run api:build      # compile backend TypeScript
-npm run api:start       # run compiled API server
-npm run typecheck      # run TypeScript checks for frontend + backend
-npm test               # run backend tests
-npm run prisma:validate # validate Prisma schema
-npm run prisma:generate # generate Prisma client
-npm run prisma:migrate  # run Prisma migration in dev mode
-npm run db:seed:dev    # create dev admin user
-```
-
-## API Overview
-
-The backend uses a modular Express structure with routes for auth, property administration, maintenance, payments, applications, and notifications. Health endpoints are included for readiness and liveness checks.
-
-Primary API conventions:
-
-- Auth routes under `/api/v1/auth`
-- Health checks under `/api/v1/health`
-- Protected routes require a bearer token
-
-## Documentation
-
-Detailed technical docs are available in the `docs/` folder:
-
-- `docs/backend.md` — backend setup and auth notes
-- `docs/integrations.md` — provider adapters and integration boundaries
-- `docs/operations.md` — deploy and operational guidance
-
-## Production Notes
-
-- Set a strong `JWT_SECRET` in production.
-- Use a managed PostgreSQL service or secure deployment credentials.
-- Keep provider adapters behind explicit configuration; live payment/email/SMS providers should be intentionally configured and tested.
-- Do not expose secrets in source control.
-
-## License
-
-This project does not appear to include a license file. If you plan to distribute or reuse it commercially, confirm the repository’s intended licensing before publishing or integrating it into other projects.
-
-## Contributing
-
-Contributions are welcome. For significant changes, open an issue or start a discussion before making a large update.
-
-## Support
-
-For questions or troubleshooting, refer to the repository docs and the project configuration files first. If a problem persists, open a GitHub issue with the exact error message and setup context.
