@@ -2,25 +2,34 @@
 
 ## Deploy
 
-### Render (managed deployment)
+### Free-tier deployment
 
-For the simplest managed deployment, push the repository to GitHub, create a
-new Render Blueprint from it, and deploy `render.yaml`. Render builds one
-container that serves the frontend and API from the same origin, provisions a
-private PostgreSQL database, runs migrations before each deploy, generates the
-JWT secret, and uses Render's HTTPS endpoint. The Blueprint uses paid always-on
-service/database plans; review the current prices in Render before confirming
-resource creation. Configure a custom domain in Render if desired.
+The Blueprint in `render.yaml` uses Render's free web-service plan and an
+external PostgreSQL database. Create a free PostgreSQL database with a provider
+such as Neon, copy its direct connection string, then create a Render Blueprint
+from the GitHub repository. When prompted, set `DATABASE_URL` to that connection
+string; Render generates `JWT_SECRET`. The Docker start command applies Prisma
+migrations before launching the API. The same service serves the frontend and
+API over Render HTTPS.
 
-After the first deploy is healthy, open the service shell and run the
-administrator bootstrap once. Add the three `BOOTSTRAP_ADMIN_*` variables
-temporarily in the Render service's environment settings, then run:
+Free hosting has limits: the web service may sleep when idle and take time to
+wake, and free database providers have their own quotas, suspension, and backup
+limits. Check both providers' current free-tier terms and keep independent
+backups. This is suitable for a demo or low-traffic trial, not a reliability-
+critical production service. Do not enter billing details or select a paid
+plan if you need to stay at $0.
+
+After the first deploy is healthy, bootstrap the administrator from your
+computer (the free web service may not provide an interactive shell). Clone the
+repo, run `npm ci`, and put the production `DATABASE_URL` plus
+`BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_NAME`, and
+`BOOTSTRAP_ADMIN_PASSWORD` in your local ignored `.env` file. Then run:
 
 ```sh
-node dist-server/bootstrap-admin.js
+npm run db:bootstrap:admin
 ```
 
-Remove the bootstrap variables and redeploy after the command succeeds. Do not
+Remove those bootstrap variables from `.env` after the command succeeds. Do not
 use the development seed account in production.
 
 To accept rent through Stripe, first deploy with the default development
@@ -28,9 +37,10 @@ payment provider. In Stripe, add a webhook endpoint at
 `https://<your-render-host>/api/v1/payments/webhook` for
 `checkout.session.completed`. Then set `PAYMENT_PROVIDER=stripe`,
 `STRIPE_SECRET_KEY`, and the endpoint's `STRIPE_WEBHOOK_SECRET` in the Render
-service environment and redeploy. Stripe Checkout return URLs use
+service environment. Stripe Checkout return URLs use
 `RENDER_EXTERNAL_URL`; for other hosts, set `APP_URL` to the public HTTPS app
-origin. Use Stripe test-mode keys and webhook signing secret for staging.
+origin. Use Stripe test-mode keys and webhook signing secret for testing.
+Stripe charges transaction fees; payment processing is not free.
 
 ### Docker Compose
 
