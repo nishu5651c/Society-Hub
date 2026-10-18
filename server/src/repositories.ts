@@ -70,6 +70,19 @@ export const paymentRepository = {
     }
     throw new HttpError(503, "Payment persistence is not configured");
   },
+  async completeStripeCheckout(input: { paymentId: string; amountPaid: number; currency: string; paidAt: Date }) {
+    if (!prisma) throw new HttpError(503, "Payment persistence is not configured");
+    if (input.currency.toLowerCase() !== "inr") throw new HttpError(400, "Stripe payment currency does not match INR");
+    const payment = await prisma.payment.findUnique({ where: { id: input.paymentId } });
+    if (!payment) throw new HttpError(404, "Payment not found");
+    if (payment.amount * 100 !== input.amountPaid) throw new HttpError(400, "Stripe payment amount does not match the payment record");
+    if (payment.status === "PAID") return payment;
+    await prisma.payment.updateMany({
+      where: { id: input.paymentId, status: { not: "PAID" } },
+      data: { status: "PAID", paidAt: input.paidAt },
+    });
+    return prisma.payment.findUnique({ where: { id: input.paymentId } });
+  },
 };
 
 export const memberRepository = {

@@ -12,6 +12,19 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      target: build
+    command:
+      ["npx", "prisma", "migrate", "deploy", "--schema", "prisma/schema.prisma"]
+    environment:
+      DATABASE_URL: postgresql://societyhub:${POSTGRES_PASSWORD}@postgres:5432/societyhub?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
   api:
     build:
       context: .
@@ -21,20 +34,45 @@ services:
       PORT: 4000
       DATABASE_URL: postgresql://societyhub:${POSTGRES_PASSWORD}@postgres:5432/societyhub?schema=public
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      APP_URL: ${APP_URL:-http://localhost:8080}
       CORS_ORIGIN: ${CORS_ORIGIN:?set CORS_ORIGIN}
       PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-development}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-development}
       SMS_PROVIDER: ${SMS_PROVIDER:-development}
     depends_on:
-      postgres:
-        condition: service_healthy
-    ports:
-      - "4000:4000"
+      migrate:
+        condition: service_completed_successfully
+    expose:
+      - "4000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/api/v1/health/ready').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    init: true
   frontend:
     build: .
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     ports:
       - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
 volumes:
   postgres-data:

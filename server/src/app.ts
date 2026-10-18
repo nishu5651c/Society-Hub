@@ -1,4 +1,5 @@
 import express from "express";
+import path from "node:path";
 import cors from "cors";
 import helmet from "helmet";
 import { config } from "./config.js";
@@ -10,6 +11,10 @@ app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(helmet({ referrerPolicy: { policy: "strict-origin-when-cross-origin" } }));
 app.use(cors({ origin: config.corsOrigin, credentials: false }));
+app.use(
+  "/api/v1/payments/webhook",
+  express.raw({ type: "application/json", limit: "1mb" }),
+);
 app.use(express.json({ limit: "1mb" }));
 app.use((req, res, next) => {
   const requestId = req.header("x-request-id") ?? crypto.randomUUID();
@@ -34,5 +39,25 @@ app.use((req, res, next) => {
   next();
 });
 app.use("/api/v1", router);
+if (config.nodeEnv === "production") {
+  const webRoot = path.resolve(process.cwd(), "dist");
+  app.use(express.static(webRoot, {
+    index: false,
+    setHeaders(res, filePath) {
+      res.setHeader(
+        "Cache-Control",
+        filePath.includes(`${path.sep}assets${path.sep}`)
+          ? "public, max-age=31536000, immutable"
+          : "no-cache",
+      );
+    },
+  }));
+  app.use((req, res, next) => {
+    if (req.method !== "GET" || req.path.startsWith("/api/")) return next();
+    res.sendFile(path.join(webRoot, "index.html"), (error) => {
+      if (error) next(error);
+    });
+  });
+}
 app.use(notFound);
 app.use(errorHandler);

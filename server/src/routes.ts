@@ -78,13 +78,29 @@ router.post("/maintenance", validate(z.object({
   router.post("/payments", requireAuth, requireRoles("ADMIN", "MANAGER", "STAFF"), validate(z.object({ body: paymentInput, params: z.unknown(), query: z.unknown() })), async (req, res, next) => {
     try { res.status(201).json({ data: await paymentRepository.create(req.body) }); } catch (error) { next(error); }
   });
-  router.post("/payments/:id/checkout", requireAuth, validate(z.object({
-    body: z.object({ returnUrl: z.string().url() }), params: idParams.shape.params, query: z.unknown(),
-  })), async (req, res, next) => {
+  router.post("/payments/webhook", async (req, res, next) => {
+    try {
+      if (!Buffer.isBuffer(req.body)) throw new HttpError(400, "Expected a raw Stripe webhook payload");
+      const signature = req.header("stripe-signature");
+      if (!signature) throw new HttpError(400, "Stripe signature is required");
+      const confirmation = await paymentProvider.handleWebhook(req.body, signature);
+      if (confirmation) await paymentRepository.completeStripeCheckout(confirmation);
+      res.status(200).json({ received: true });
+    } catch (error) { next(error); }
+  });
+  router.post("/payments/:id/checkout", requireAuth, validate(idParams), async (req, res, next) => {
     try {
       const payment = (await paymentRepository.list(req.user)).find((item) => item.id === req.params.id);
-      if (!payment) throw new HttpError(404, "Payment not found");
-      const checkout = await paymentProvider.createCheckout({ paymentId: payment.id, amount: payment.amount, currency: "INR", returnUrl: req.body.returnUrl });
+      if (!payment || payment.payerId !== req.user.id) throw new HttpError(404, "Payment not found");
+      if (payment.status !== "PENDING" && payment.status !== "OVERDUE") {
+        throw new HttpError(409, "Only pending or overdue payments can be checked out");
+      }
+      const checkout = await paymentProvider.createCheckout({
+        paymentId: payment.id,
+        amount: payment.amount,
+        currency: "INR",
+        customerEmail: payment.payer.email,
+      });
       res.json({ data: checkout });
     } catch (error) { next(error); }
   });

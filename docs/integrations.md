@@ -7,10 +7,13 @@ credentials belong in the browser or repository.
 
 `server/src/providers.ts` exposes `PaymentProvider`. The development adapter
 always returns `503 No payment provider is configured`; it never marks a charge
-paid or fabricates a checkout URL. Implement `createCheckout` and verified
-webhook handling for the chosen PCI-compliant provider, then inject it from
-server configuration. The existing `POST /api/v1/payments` endpoint records a
-pending ledger entry unless an explicitly verified status is supplied.
+paid or fabricates a checkout URL. The Stripe adapter creates server-priced
+INR Checkout sessions, verifies `checkout.session.completed` signatures, and
+marks a ledger entry paid only when Stripe reports the matching amount and
+currency. Residents can start checkout for their own pending or overdue
+payments. Configure `PAYMENT_PROVIDER=stripe`, `STRIPE_SECRET_KEY`,
+`STRIPE_WEBHOOK_SECRET`, and the public `APP_URL` before enabling it. Never
+accept payment status from the browser.
 
 ## Email and SMS
 
@@ -18,7 +21,8 @@ pending ledger entry unless an explicitly verified status is supplied.
 `server/src/providers.ts`) are the only application boundaries for outbound
 messages. Development adapters log metadata only. Production adapters must
 use secret-managed credentials, provider timeouts, retry limits, and delivery
-status webhooks.
+status webhooks. Live email and SMS adapters are not implemented; production
+startup rejects attempts to select them.
 
 ## Realtime chat
 
@@ -33,6 +37,9 @@ client at deployment time.
 
 - Set `NODE_ENV=production`, a random `JWT_SECRET` of at least 32 characters,
   `DATABASE_URL`, and an explicit `CORS_ORIGIN`.
+- Use `CORS_ORIGIN=same-origin` when the API serves the frontend itself.
+- Create the initial administrator with the one-time
+  `node dist-server/bootstrap-admin.js` command.
 - Run `npm run prisma:validate`, `npm run api:build`, `npm run build`, and
   `npm test` in CI.
 - Terminate TLS at the edge, restrict database network access, and configure

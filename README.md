@@ -99,7 +99,8 @@ Example environment:
 PORT=4000
 NODE_ENV=development
 VITE_API_URL=http://localhost:4000/api/v1
-DATABASE_URL=postgresql://societyhub:change-me@localhost:5432/societyhub?schema=public
+APP_URL=http://localhost:8080
+DATABASE_URL=postgresql://societyhub:replace-with-your-postgres-password@localhost:5432/societyhub?schema=public
 JWT_SECRET=replace-with-a-long-random-secret-at-least-32-characters
 CORS_ORIGIN=http://localhost:5173
 PAYMENT_PROVIDER=development
@@ -172,7 +173,9 @@ npm test               # run backend tests
 npm run prisma:validate # validate Prisma schema
 npm run prisma:generate # generate Prisma client
 npm run prisma:migrate  # run Prisma migration in dev mode
+npm run db:migrate:deploy # apply committed database migrations
 npm run db:seed:dev    # create dev admin user
+npm run db:bootstrap:admin # one-time production admin bootstrap
 ```
 
 ## API Overview
@@ -197,8 +200,10 @@ Detailed technical docs are available in the `docs/` folder:
 
 - Set a strong `JWT_SECRET` in production.
 - Use a managed PostgreSQL service or secure deployment credentials.
-- Keep provider adapters behind explicit configuration; live payment/email/SMS providers should be intentionally configured and tested.
+- Stripe rent checkout is available after configuring the secret key and signed webhook; email and SMS remain development-only.
+- Use the Render Blueprint in `render.yaml` for a managed deployment; it provisions paid service/database resources.
 - Do not expose secrets in source control.
+- For Docker Compose deployment instructions, health checks, and migration behavior, see [`docs/operations.md`](docs/operations.md).
 
 ## License
 
