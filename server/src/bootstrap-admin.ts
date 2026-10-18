@@ -48,7 +48,11 @@ try {
         },
       });
     },
-    { isolationLevel: "Serializable" },
+    {
+      isolationLevel: "Serializable",
+      maxWait: 30_000,
+      timeout: 60_000,
+    },
   );
   console.info(
     `Bootstrapped production administrator ${BOOTSTRAP_ADMIN_EMAIL.toLowerCase()}`,
